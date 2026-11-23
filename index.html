@@ -346,8 +346,8 @@ footer b{color:#fff}
               </select>
             </label>
             <div class="row">
-              <label>Username
-                <input type="text" id="rUser" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_.]+" placeholder="xarfo/tiro keliya">
+              <label>Gmail / Email
+                <input type="email" id="rEmail" required maxlength="254" autocomplete="email" placeholder="Tusaale: magaca@gmail.com">
               </label>
               <label>Password
                 <input type="password" id="rPass" required minlength="6" placeholder="ugu yaraan 6 xarfood">
@@ -362,7 +362,7 @@ footer b{color:#fff}
           </form>
 
           <form id="loginForm" class="form hidden">
-            <label>Username <input type="text" id="lUser" required></label>
+            <label>Gmail / Email <input type="email" id="lEmail" required autocomplete="email" placeholder="magaca@gmail.com"></label>
             <label>Password <input type="password" id="lPass" required></label>
             <p class="msg" id="logMsg" role="alert"></p>
             <button class="btn full" type="submit" id="logBtn">Gal</button>
@@ -509,7 +509,7 @@ const setMsg = (el, t, c) => { el.textContent = t; el.className = "msg " + (c ||
 const fillSel = (sel, items, ph) => { sel.innerHTML = `<option value="">${ph}</option>` + items.map(i => `<option>${esc(i)}</option>`).join(""); sel.disabled = !items.length; };
 const regionsOf = s => Object.keys(STATES[s] || {});
 const districtsOf = (s, r) => (STATES[s] && STATES[s][r]) || [];
-const normUser = u => u.trim().toLowerCase();
+const normEmail = email => email.trim().toLowerCase();
 
 /* =====================================================================
    3) KAYDKA — Firebase (dhab ah) ama localStorage (tijaabo)
@@ -520,7 +520,6 @@ if (CLOUD) {
   firebase.initializeApp(FIREBASE_CONFIG);
   const auth = firebase.auth(), db = firebase.firestore();
   let registering = false;
-  const toEmail = u => normUser(u) + "@deeqsi.app";
 
   Store = {
     mode: "cloud",
@@ -535,32 +534,32 @@ if (CLOUD) {
         if (!user) return cb(null);
         try {
           const d = await db.collection("donors").doc(user.uid).get();
-          cb(d.exists ? d.data() : null);
+          cb(d.exists ? { ...d.data(), email: user.email } : null);
         } catch (e) { cb(null); }
       });
     },
     async register(p) {
       registering = true;
       try {
-        const cred = await auth.createUserWithEmailAndPassword(toEmail(p.username), p.password);
+        const cred = await auth.createUserWithEmailAndPassword(normEmail(p.email), p.password);
         const data = { name: p.name, phone: p.phone, state: p.state, region: p.region,
-                       district: p.district, blood: p.blood, username: normUser(p.username),
+                       district: p.district, blood: p.blood,
                        createdAt: firebase.firestore.FieldValue.serverTimestamp() };
         await db.collection("donors").doc(cred.user.uid).set(data);
         registering = false;
-        return data;
+        return { ...data, email: cred.user.email };
       } catch (e) { registering = false; throw e; }
     },
     async login(u, p) {
-      const cred = await auth.signInWithEmailAndPassword(toEmail(u), p);
+      const cred = await auth.signInWithEmailAndPassword(normEmail(u), p);
       const d = await db.collection("donors").doc(cred.user.uid).get();
-      return d.exists ? d.data() : null;
+      return d.exists ? { ...d.data(), email: cred.user.email } : null;
     },
     logout() { return auth.signOut(); }
   };
 } else {
   /* ----- Habka tijaabada: xogta waxay ku jirtaa browser-ka keliya ----- */
-  const KU = "deeqsi_users_v3", KS = "deeqsi_session_v3";
+  const KU = "deeqsi_users_v4", KS = "deeqsi_session_v4";
   const load = () => { try { return JSON.parse(localStorage.getItem(KU)) || []; } catch (e) { return []; } };
   const save = u => localStorage.setItem(KU, JSON.stringify(u));
   const hash = async p => {
@@ -574,21 +573,21 @@ if (CLOUD) {
   Store = {
     mode: "local",
     onDonors(cb) { donorCb = cb; pushDonors(); },
-    onAuth(cb) { authCb = cb; const s = localStorage.getItem(KS); const u = s && load().find(x => x.username === s); cb(u ? pub(u) : null); },
+    onAuth(cb) { authCb = cb; const s = localStorage.getItem(KS); const u = s && load().find(x => x.email === s); cb(u ? pub(u) : null); },
     async register(p) {
-      const users = load(), username = normUser(p.username);
-      if (users.some(u => u.username === username)) { const e = new Error("exists"); e.code = "auth/email-already-in-use"; throw e; }
+      const users = load(), email = normEmail(p.email);
+      if (users.some(u => u.email === email)) { const e = new Error("exists"); e.code = "auth/email-already-in-use"; throw e; }
       const data = { name: p.name, phone: p.phone, state: p.state, region: p.region, district: p.district,
-                     blood: p.blood, username, password: await hash(p.password), createdAt: Date.now() };
+                     blood: p.blood, email, password: await hash(p.password), createdAt: Date.now() };
       users.push(data); save(users);
-      localStorage.setItem(KS, username);
+      localStorage.setItem(KS, email);
       pushDonors();
       return pub(data);
     },
     async login(u, p) {
-      const user = load().find(x => x.username === normUser(u));
+      const user = load().find(x => x.email === normEmail(u));
       if (!user || user.password !== await hash(p)) { const e = new Error("bad"); e.code = "auth/invalid-credential"; throw e; }
-      localStorage.setItem(KS, user.username);
+      localStorage.setItem(KS, user.email);
       return pub(user);
     },
     async logout() { localStorage.removeItem(KS); }
@@ -656,17 +655,17 @@ function renderAuth() {
       <dt>Gobol</dt><dd>${esc(ME.region)}</dd>
       <dt>Degmo</dt><dd>${esc(ME.district)}</dd>
       <dt>Nooca dhiigga</dt><dd>${esc(ME.blood)}</dd>
-      <dt>Username</dt><dd>${esc(ME.username)}</dd>`;
+      <dt>Email</dt><dd>${esc(ME.email || "")}</dd>`;
   }
 }
 
 /* ===================== AKOONKA ===================== */
 const errText = e => ({
-  "auth/email-already-in-use": "Username-kan horey ayaa loo isticmaalay.",
+  "auth/email-already-in-use": "Email-kan hore ayaa akoon loogu sameeyay.",
   "auth/weak-password": "Password-ku aad buu u gaaban yahay (ugu yaraan 6).",
-  "auth/invalid-credential": "Username ama password waa khalad.",
-  "auth/wrong-password": "Username ama password waa khalad.",
-  "auth/user-not-found": "Username ama password waa khalad.",
+  "auth/invalid-credential": "Email ama password waa khalad.",
+  "auth/wrong-password": "Email ama password waa khalad.",
+  "auth/user-not-found": "Email ama password waa khalad.",
   "auth/network-request-failed": "Internet ma jiro. Mar kale isku day.",
   "auth/too-many-requests": "Isku day badan. Wax yar sug."
 }[e.code] || "Khalad ayaa dhacay. Mar kale isku day.");
@@ -675,13 +674,13 @@ async function onRegister(e) {
   e.preventDefault();
   const msg = $("regMsg"), btn = $("regBtn");
   setMsg(msg, "", "");
-  if (!/^[A-Za-z0-9_.]{3,24}$/.test($("rUser").value.trim())) return setMsg(msg, "Username: xarfo, tiro, _ ama . keliya.", "err");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normEmail($("rEmail").value))) return setMsg(msg, "Fadlan geli Gmail/Email sax ah.", "err");
   btn.disabled = true; btn.textContent = "Waa la sameynayaa…";
   try {
     ME = await Store.register({
       name: $("rName").value.trim(), phone: $("rPhone").value.trim(),
       state: $("rState").value, region: $("rRegion").value, district: $("rDistrict").value,
-      blood: $("rBlood").value, username: $("rUser").value, password: $("rPass").value
+      blood: $("rBlood").value, email: $("rEmail").value, password: $("rPass").value
     });
     e.target.reset();
     fillSel($("rRegion"), [], "Dooro gobol"); fillSel($("rDistrict"), [], "Dooro degmo");
@@ -696,7 +695,7 @@ async function onLogin(e) {
   setMsg(msg, "", "");
   btn.disabled = true;
   try {
-    ME = await Store.login($("lUser").value, $("lPass").value);
+    ME = await Store.login($("lEmail").value, $("lPass").value);
     if (!ME) throw { code: "x" };
     e.target.reset(); renderAuth();
   } catch (err) { setMsg(msg, errText(err), "err"); }
