@@ -740,8 +740,23 @@ function initInstall() {
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(e => console.warn("SW:", e));
   }
+
+  // Ku xiro badhamada marka hore si aysan u noqon qoraal aan shaqayn.
+  ["navInstall", "installBtn", "barInstall"].forEach(id => {
+    const button = $(id);
+    if (button) button.addEventListener("click", doInstall);
+  });
+  if ($("barClose")) $("barClose").addEventListener("click", () => {
+    $("installBar").classList.remove("show");
+    try { localStorage.setItem("deeqsi_install_dismissed", "1"); } catch (e) {}
+  });
+  if ($("helpClose")) $("helpClose").addEventListener("click", () => $("helpModal").classList.remove("show"));
+  if ($("helpModal")) $("helpModal").addEventListener("click", e => { if (e.target.id === "helpModal") $("helpModal").classList.remove("show"); });
+
   if (isStandalone()) {            // app-ka horey ayaa loo rakibay
     $("app").classList.add("hidden");
+    $("navInstall").classList.add("hidden");
+    $("installBar").classList.remove("show");
     return;
   }
   const dismissed = (() => { try { return localStorage.getItem("deeqsi_install_dismissed"); } catch (e) { return null; } })();
@@ -762,13 +777,6 @@ function initInstall() {
     $("navInstall").classList.remove("hidden");
     if (!dismissed) setTimeout(() => $("installBar").classList.add("show"), 3500);
   }
-  ["navInstall", "installBtn", "barInstall"].forEach(id => $(id).addEventListener("click", doInstall));
-  $("barClose").addEventListener("click", () => {
-    $("installBar").classList.remove("show");
-    try { localStorage.setItem("deeqsi_install_dismissed", "1"); } catch (e) {}
-  });
-  $("helpClose").addEventListener("click", () => $("helpModal").classList.remove("show"));
-  $("helpModal").addEventListener("click", e => { if (e.target.id === "helpModal") $("helpModal").classList.remove("show"); });
 }
 
 /* ===================== INIT ===================== */
