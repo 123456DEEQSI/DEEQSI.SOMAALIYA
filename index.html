@@ -732,7 +732,7 @@ async function doInstall() {
     $("navInstall").classList.add("hidden");
     $("installBar").classList.remove("show");
   } else {
-    showHelp();
+    showHelp(); // Haddii browser-ku uusan bixin install prompt, tus tilmaamaha rakibidda.
   }
 }
 
@@ -754,7 +754,7 @@ function initInstall() {
   if ($("helpModal")) $("helpModal").addEventListener("click", e => { if (e.target.id === "helpModal") $("helpModal").classList.remove("show"); });
 
   if (isStandalone()) {            // app-ka horey ayaa loo rakibay
-    $("app").classList.add("hidden");
+    // Qaybta App-ka ha la qarin; badhanka wuxuu tusayaa tilmaamaha haddii loo baahdo.
     $("navInstall").classList.add("hidden");
     $("installBar").classList.remove("show");
     return;
@@ -770,7 +770,7 @@ function initInstall() {
     deferredPrompt = null;
     $("navInstall").classList.add("hidden");
     $("installBar").classList.remove("show");
-    $("app").classList.add("hidden");
+    // Qaybta App-ka ha la qarin si ay mar walba uga muuqato bogga.
   });
   // iPhone/iPad/Safari ma leh beforeinstallprompt: tus badhan tilmaamo ah
   if (isIOS() || isSafariMac()) {
