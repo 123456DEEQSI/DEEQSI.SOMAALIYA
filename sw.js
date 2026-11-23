@@ -1,18 +1,17 @@
-const CACHE = "deeqsi-v2";
+const CACHE_NAME = "deeqsi-shell-v1";
 
-const SHELL = [
+const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
-  "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(SHELL))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
       .then(() => self.skipWaiting())
   );
 });
@@ -23,7 +22,7 @@ self.addEventListener("activate", event => {
       .then(keys =>
         Promise.all(
           keys
-            .filter(key => key !== CACHE)
+            .filter(key => key !== CACHE_NAME)
             .map(key => caches.delete(key))
         )
       )
@@ -32,28 +31,30 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  const request = event.request;
-  const url = new URL(request.url);
-
   if (
-    request.method !== "GET" ||
-    url.origin !== location.origin
-  ) return;
-
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).then(response => {
-        return response;
-      }).catch(async () => {
-        return await caches.match("./index.html");
-      })
-    );
+    event.request.method !== "GET" ||
+    new URL(event.request.url).origin !== self.location.origin
+  ) {
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(cached => {
-      return cached || fetch(request);
-    })
+    fetch(event.request)
+      .then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(event.request, copy));
+        }
+
+        return response;
+      })
+      .catch(() =>
+        caches.match(event.request)
+          .then(cached =>
+            cached || caches.match("./index.html")
+          )
+      )
   );
 });
