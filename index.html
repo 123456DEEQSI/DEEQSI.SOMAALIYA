@@ -741,7 +741,6 @@ function initInstall() {
     navigator.serviceWorker.register("sw.js").catch(e => console.warn("SW:", e));
   }
   if (isStandalone()) {            // app-ka horey ayaa loo rakibay
-    $("app").classList.add("hidden");
     return;
   }
   const dismissed = (() => { try { return localStorage.getItem("deeqsi_install_dismissed"); } catch (e) { return null; } })();
@@ -755,7 +754,6 @@ function initInstall() {
     deferredPrompt = null;
     $("navInstall").classList.add("hidden");
     $("installBar").classList.remove("show");
-    $("app").classList.add("hidden");
   });
   // iPhone/iPad/Safari ma leh beforeinstallprompt: tus badhan tilmaamo ah
   if (isIOS() || isSafariMac()) {
