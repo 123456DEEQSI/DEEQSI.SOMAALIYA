@@ -737,6 +737,12 @@ async function doInstall() {
 }
 
 function initInstall() {
+  // Ku xir badhamada marka hore, si aysan u noqon qoraal aan jawaab lahayn.
+  ["navInstall", "installBtn", "barInstall"].forEach(id => {
+    const button = $(id);
+    if (button) button.addEventListener("click", doInstall);
+  });
+
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(e => console.warn("SW:", e));
   }
@@ -760,7 +766,6 @@ function initInstall() {
     $("navInstall").classList.remove("hidden");
     if (!dismissed) setTimeout(() => $("installBar").classList.add("show"), 3500);
   }
-  ["navInstall", "installBtn", "barInstall"].forEach(id => $(id).addEventListener("click", doInstall));
   $("barClose").addEventListener("click", () => {
     $("installBar").classList.remove("show");
     try { localStorage.setItem("deeqsi_install_dismissed", "1"); } catch (e) {}
