@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html lang="so">
 <head>
-    <link rel="manifest" href="./manifest.webmanifest">
-    <meta name="theme-color" content="#8f0a1f">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-
-    <meta charset="UTF-8">
-    <title>DEEQSI</title>
-</head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deeqsi – Dhiig-bixin Soomaaliya oo dhan</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#8f0a1f">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deeqsi – Dhiig-bixin Soomaaliya oo dhan</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#8f0a1f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Deeqsi">
@@ -711,17 +703,6 @@ async function onLogout() { await Store.logout(); ME = null; renderAuth(); }
    4) SOO DAG APP (PWA)
    ===================================================================== */
 let deferredPrompt = null;
-// Qabso install event-ka goor hore si uusan uga hor marin init-ka bogga.
-window.addEventListener("beforeinstallprompt", e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const nav = document.getElementById("navInstall");
-  const bar = document.getElementById("installBar");
-  if (nav) nav.classList.remove("hidden");
-  let dismissed = null;
-  try { dismissed = localStorage.getItem("deeqsi_install_dismissed"); } catch (err) {}
-  if (bar && !dismissed) setTimeout(() => bar.classList.add("show"), 800);
-});
 const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isSafariMac = () => /^((?!chrome|android).)*safari/i.test(navigator.userAgent) && !isIOS();
@@ -751,7 +732,7 @@ async function doInstall() {
 
 function initInstall() {
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(e => console.warn("SW:", e));
+    navigator.serviceWorker.register("sw.js").catch(e => console.warn("SW:", e));
   }
 
   // Ku xiro badhamada marka hore si aysan u noqon qoraal aan shaqayn.
@@ -773,10 +754,12 @@ function initInstall() {
     return;
   }
   const dismissed = (() => { try { return localStorage.getItem("deeqsi_install_dismissed"); } catch (e) { return null; } })();
-  if (deferredPrompt) {
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredPrompt = e;
     $("navInstall").classList.remove("hidden");
-    if (!dismissed) setTimeout(() => $("installBar").classList.add("show"), 800);
-  }
+    if (!dismissed) setTimeout(() => $("installBar").classList.add("show"), 2500);
+  });
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
     $("navInstall").classList.add("hidden");
