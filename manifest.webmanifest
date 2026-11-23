@@ -1,17 +1,23 @@
 {
-  "name": "Deeqsi – Dhiig-bixin Soomaaliya",
-  "short_name": "Deeqsi",
-  "description": "Is diwaangeli oo noqo deeq-bixiye dhiig, ama ka raadi dhiig gobol kasta iyo degmo kasta oo Soomaaliya ah.",
-  "lang": "so",
-  "start_url": "./deeqsi.html",
+  "name": "DEEQSI - Dhiig-bixin Soomaaliyeed",
+  "short_name": "DEEQSI",
+  "description": "Barnaamijka dhiig-bixinta Soomaaliya",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#fffaf9",
-  "theme_color": "#8f0a1f",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#087e8b",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
